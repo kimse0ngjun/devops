@@ -1,5 +1,7 @@
 package org.cloud.configuration;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,17 +13,25 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) 
-            .csrf(csrf -> csrf.disable()) 
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/product/**").permitAll() 
-                .anyRequest().authenticated()
-            );
-        return http.build();
-    }
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	    http
+	        .cors(cors -> cors.configurationSource(request -> {
+	            var config = new org.springframework.web.cors.CorsConfiguration();
+	            config.setAllowedOriginPatterns(List.of("http://3.39.160.30*", "http://localhost*"));
+	            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+	            config.setAllowedHeaders(List.of("*"));
+	            config.setAllowCredentials(true);
+	            return config;
+	        }))
+	        .csrf(csrf -> csrf.disable())
+	        .authorizeHttpRequests(auth -> auth
+	            .requestMatchers("/api/**", "/uploads/**").permitAll()
+	            .anyRequest().authenticated()
+	        );
+
+	    return http.build();
+	}
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
